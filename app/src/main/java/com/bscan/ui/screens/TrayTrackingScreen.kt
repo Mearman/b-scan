@@ -93,7 +93,7 @@ fun TrayTrackingScreen(
                 items(trayData) { tray ->
                     TrayCard(
                         trayData = tray,
-                        onDeleteTray = { trayToDelete = it }
+                        onDeleteTray = { trayToDelete = tray }
                     )
                 }
             }

@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import com.bscan.model.ScanResult
 import com.bscan.repository.ScanHistoryRepository
 import com.bscan.repository.InterpretedScan
@@ -27,6 +28,7 @@ fun ScanHistoryScreen(
     var scans by remember { mutableStateOf(listOf<InterpretedScan>()) }
     var selectedFilter by remember { mutableStateOf("All") }
     var expandedItems by remember { mutableStateOf(setOf<Long>()) }
+    val coroutineScope = rememberCoroutineScope()
     
     LaunchedEffect(Unit) {
         try {
@@ -55,12 +57,14 @@ fun ScanHistoryScreen(
                 actions = {
                     IconButton(
                         onClick = { 
-                            try {
-                                repository.clearHistory()
-                                scans = emptyList()
-                            } catch (e: Exception) {
-                                // If clear fails, just reset local scans list
-                                scans = emptyList()
+                            coroutineScope.launch {
+                                try {
+                                    repository.clearHistory()
+                                    scans = emptyList()
+                                } catch (e: Exception) {
+                                    // If clear fails, just reset local scans list
+                                    scans = emptyList()
+                                }
                             }
                         }
                     ) {

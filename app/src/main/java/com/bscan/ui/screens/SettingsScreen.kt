@@ -94,7 +94,9 @@ fun SettingsScreen(
                     currentMode = materialDisplayMode,
                     onModeChanged = { mode ->
                         materialDisplayMode = mode
-                        userPrefsRepository.setMaterialDisplayMode(mode)
+                        scope.launch {
+                            userPrefsRepository.setMaterialDisplayMode(mode)
+                        }
                     }
                 )
             }
@@ -586,7 +588,9 @@ private fun BleScalesPreferenceCard(
                         checked = autoConnectEnabled,
                         onCheckedChange = { enabled ->
                             autoConnectEnabled = enabled
-                            userPrefsRepository.setBleScalesAutoConnectEnabled(enabled)
+                            scope.launch {
+                                userPrefsRepository.setBleScalesAutoConnectEnabled(enabled)
+                            }
                         }
                     )
                 }

@@ -10,11 +10,10 @@ import com.bscan.repository.TrayTrackingRepository
 import com.bscan.repository.MappingsRepository
 import com.bscan.interpreter.InterpreterFactory
 import com.bscan.data.BambuProductDatabase
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     
@@ -59,16 +58,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * New method to process scan data using the FilamentInterpreter
      */
     fun processScanData(encryptedData: EncryptedScanData, decryptedData: DecryptedScanData) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                scanState = ScanState.PROCESSING,
-                error = null
-            )
-            _scanProgress.value = ScanProgress(
-                stage = ScanStage.PARSING,
-                percentage = 0.9f,
-                statusMessage = "Interpreting filament data"
-            )
+        viewModelScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) {
+                _uiState.value = _uiState.value.copy(
+                    scanState = ScanState.PROCESSING,
+                    error = null
+                )
+                _scanProgress.value = ScanProgress(
+                    stage = ScanStage.PARSING,
+                    percentage = 0.9f,
+                    statusMessage = "Interpreting filament data"
+                )
+            }
             
             // Store the raw scan data first
             scanHistoryRepository.saveScan(encryptedData, decryptedData)
@@ -97,13 +98,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             
-            _uiState.value = when (result) {
-                is TagReadResult.Success -> {
-                    _scanProgress.value = ScanProgress(
-                        stage = ScanStage.COMPLETED,
-                        percentage = 1.0f,
-                        statusMessage = "Scan completed successfully"
-                    )
+            withContext(Dispatchers.Main) {
+                _uiState.value = when (result) {
+                    is TagReadResult.Success -> {
+                        _scanProgress.value = ScanProgress(
+                            stage = ScanStage.COMPLETED,
+                            percentage = 1.0f,
+                            statusMessage = "Scan completed successfully"
+                        )
                     BScanUiState(
                         filamentInfo = result.filamentInfo,
                         scanState = ScanState.SUCCESS,
@@ -165,7 +167,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /**
      * Helper method to create ScanDebugInfo from DecryptedScanData
      */
-    private fun createDebugInfoFromDecryptedData(decryptedData: DecryptedScanData): ScanDebugInfo {
+    fun createDebugInfoFromDecryptedData(decryptedData: DecryptedScanData): ScanDebugInfo {
         return ScanDebugInfo(
             uid = decryptedData.tagUid,
             tagSizeBytes = decryptedData.tagSizeBytes,
@@ -219,7 +221,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
         
         // Save to history even for failed scans
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             scanHistoryRepository.saveScan(encryptedData, decryptedData)
             trayTrackingRepository.recordScan(decryptedData)
         }
@@ -341,7 +343,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /**
      * Get default printing temperatures based on material type
      */
-    private fun getDefaultMinTemp(materialType: String): Int = when {
+    fun getDefaultMinTemp(materialType: String): Int = when {
         materialType.contains("PLA") -> 190
         materialType.contains("ABS") -> 220
         materialType.contains("PETG") -> 220
@@ -349,7 +351,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         else -> 190
     }
     
-    private fun getDefaultMaxTemp(materialType: String): Int = when {
+    fun getDefaultMaxTemp(materialType: String): Int = when {
         materialType.contains("PLA") -> 220
         materialType.contains("ABS") -> 250
         materialType.contains("PETG") -> 250
@@ -357,7 +359,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         else -> 220
     }
     
-    private fun getDefaultBedTemp(materialType: String): Int = when {
+    fun getDefaultBedTemp(materialType: String): Int = when {
         materialType.contains("PLA") -> 60
         materialType.contains("ABS") -> 80
         materialType.contains("PETG") -> 70
@@ -365,7 +367,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         else -> 60
     }
     
-    private fun getDefaultDryingTemp(materialType: String): Int = when {
+    fun getDefaultDryingTemp(materialType: String): Int = when {
         materialType.contains("PLA") -> 45
         materialType.contains("ABS") -> 60
         materialType.contains("PETG") -> 65
@@ -373,13 +375,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         else -> 45
     }
     
-    private fun getDefaultDryingTime(materialType: String): Int = when {
+    fun getDefaultDryingTime(materialType: String): Int = when {
         materialType.contains("TPU") -> 12
         materialType.contains("PETG") -> 8
         materialType.contains("ABS") -> 4
         else -> 6
     }
-    
 }
 
 data class BScanUiState(

@@ -8,10 +8,10 @@ import com.bscan.model.UpdateStatus
 import com.bscan.repository.UpdateRepository
 import com.bscan.update.DownloadProgress
 import com.bscan.update.UpdateDownloadService
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class UpdateViewModel(application: Application) : AndroidViewModel(application) {
     
@@ -27,11 +27,13 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
     }
     
     fun checkForUpdates(force: Boolean = false) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                status = UpdateStatus.CHECKING,
-                error = null
-            )
+        viewModelScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) {
+                _uiState.value = _uiState.value.copy(
+                    status = UpdateStatus.CHECKING,
+                    error = null
+                )
+            }
             
             val result = updateRepository.checkForUpdates(force)
             
@@ -48,18 +50,22 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
                         UpdateStatus.NOT_AVAILABLE
                     }
                     
-                    _uiState.value = _uiState.value.copy(
-                        status = status,
-                        updateInfo = updateInfo,
-                        error = null
-                    )
+                    withContext(Dispatchers.Main) {
+                        _uiState.value = _uiState.value.copy(
+                            status = status,
+                            updateInfo = updateInfo,
+                            error = null
+                        )
+                    }
                 },
                 onFailure = { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        status = UpdateStatus.ERROR,
-                        error = exception.message ?: "Unknown error occurred",
-                        updateInfo = null
-                    )
+                    withContext(Dispatchers.Main) {
+                        _uiState.value = _uiState.value.copy(
+                            status = UpdateStatus.ERROR,
+                            error = exception.message ?: "Unknown error occurred",
+                            updateInfo = null
+                        )
+                    }
                 }
             )
         }
@@ -68,36 +74,46 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
     fun downloadUpdate() {
         val updateInfo = _uiState.value.updateInfo ?: return
         
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(status = UpdateStatus.DOWNLOADING)
+        viewModelScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) {
+                _uiState.value = _uiState.value.copy(status = UpdateStatus.DOWNLOADING)
+            }
             
             val fileName = "b-scan-${updateInfo.latestVersion}.apk"
             
             downloadService.downloadUpdate(updateInfo.downloadUrl, fileName).collect { progress ->
                 when (progress) {
                     is DownloadProgress.Started -> {
-                        _uiState.value = _uiState.value.copy(
-                            status = UpdateStatus.DOWNLOADING,
-                            downloadProgress = 0
-                        )
+                        withContext(Dispatchers.Main) {
+                            _uiState.value = _uiState.value.copy(
+                                status = UpdateStatus.DOWNLOADING,
+                                downloadProgress = 0
+                            )
+                        }
                     }
                     is DownloadProgress.InProgress -> {
-                        _uiState.value = _uiState.value.copy(
-                            downloadProgress = progress.progress
-                        )
+                        withContext(Dispatchers.Main) {
+                            _uiState.value = _uiState.value.copy(
+                                downloadProgress = progress.progress
+                            )
+                        }
                     }
                     is DownloadProgress.Completed -> {
-                        _uiState.value = _uiState.value.copy(
-                            status = UpdateStatus.DOWNLOADED,
-                            downloadedFilePath = progress.filePath,
-                            downloadProgress = 100
-                        )
+                        withContext(Dispatchers.Main) {
+                            _uiState.value = _uiState.value.copy(
+                                status = UpdateStatus.DOWNLOADED,
+                                downloadedFilePath = progress.filePath,
+                                downloadProgress = 100
+                            )
+                        }
                     }
                     is DownloadProgress.Failed -> {
-                        _uiState.value = _uiState.value.copy(
-                            status = UpdateStatus.ERROR,
-                            error = progress.error
-                        )
+                        withContext(Dispatchers.Main) {
+                            _uiState.value = _uiState.value.copy(
+                                status = UpdateStatus.ERROR,
+                                error = progress.error
+                            )
+                        }
                     }
                 }
             }

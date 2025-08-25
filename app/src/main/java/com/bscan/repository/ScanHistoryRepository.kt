@@ -10,6 +10,8 @@ import com.bscan.interpreter.InterpreterFactory
 import com.bscan.repository.MappingsRepository
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.lang.reflect.Type
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -65,7 +67,7 @@ class ScanHistoryRepository(private val context: Context) {
     /**
      * Save both encrypted and decrypted scan data
      */
-    fun saveScan(encryptedScan: EncryptedScanData, decryptedScan: DecryptedScanData) {
+    suspend fun saveScan(encryptedScan: EncryptedScanData, decryptedScan: DecryptedScanData) {
         saveEncryptedScan(encryptedScan)
         saveDecryptedScan(decryptedScan)
     }
@@ -73,7 +75,7 @@ class ScanHistoryRepository(private val context: Context) {
     /**
      * Save encrypted scan data
      */
-    fun saveEncryptedScan(encryptedScan: EncryptedScanData) {
+    suspend fun saveEncryptedScan(encryptedScan: EncryptedScanData) = withContext(Dispatchers.IO) {
         val scans = getAllEncryptedScans().toMutableList()
         
         // Add new scan with current timestamp if not set
@@ -100,7 +102,7 @@ class ScanHistoryRepository(private val context: Context) {
     /**
      * Save decrypted scan data
      */
-    fun saveDecryptedScan(decryptedScan: DecryptedScanData) {
+    suspend fun saveDecryptedScan(decryptedScan: DecryptedScanData) = withContext(Dispatchers.IO) {
         val scans = getAllDecryptedScans().toMutableList()
         
         // Add new scan with current timestamp if not set
@@ -194,7 +196,7 @@ class ScanHistoryRepository(private val context: Context) {
     /**
      * Clear all history
      */
-    fun clearHistory() {
+    suspend fun clearHistory() {
         clearEncryptedHistory()
         clearDecryptedHistory()
     }
@@ -202,7 +204,7 @@ class ScanHistoryRepository(private val context: Context) {
     /**
      * Clear encrypted history
      */
-    fun clearEncryptedHistory() {
+    suspend fun clearEncryptedHistory() = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .remove("encrypted_scans")
             .apply()
@@ -211,7 +213,7 @@ class ScanHistoryRepository(private val context: Context) {
     /**
      * Clear decrypted history
      */
-    fun clearDecryptedHistory() {
+    suspend fun clearDecryptedHistory() = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .remove("decrypted_scans")
             .apply()

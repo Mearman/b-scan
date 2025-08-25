@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.bscan.ui.components.MaterialDisplayMode
 import com.bscan.logic.WeightUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Repository for managing user preferences
@@ -28,7 +30,7 @@ class UserPreferencesRepository(context: Context) {
     /**
      * Set the material display mode preference
      */
-    fun setMaterialDisplayMode(mode: MaterialDisplayMode) {
+    suspend fun setMaterialDisplayMode(mode: MaterialDisplayMode) = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .putString(MATERIAL_DISPLAY_MODE_KEY, mode.name)
             .apply()
@@ -51,7 +53,7 @@ class UserPreferencesRepository(context: Context) {
     /**
      * Set the preferred weight unit
      */
-    fun setWeightUnit(unit: WeightUnit) {
+    suspend fun setWeightUnit(unit: WeightUnit) = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .putString(WEIGHT_UNIT_KEY, unit.name)
             .apply()
@@ -67,7 +69,7 @@ class UserPreferencesRepository(context: Context) {
     /**
      * Set the weight measurement tolerance percentage
      */
-    fun setWeightTolerance(tolerancePercent: Float) {
+    suspend fun setWeightTolerance(tolerancePercent: Float) = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .putFloat(WEIGHT_TOLERANCE_KEY, tolerancePercent.coerceIn(0f, 50f))
             .apply()
@@ -83,7 +85,7 @@ class UserPreferencesRepository(context: Context) {
     /**
      * Set whether to show weight suggestions automatically
      */
-    fun setShowWeightSuggestions(show: Boolean) {
+    suspend fun setShowWeightSuggestions(show: Boolean) = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .putBoolean(SHOW_WEIGHT_SUGGESTIONS_KEY, show)
             .apply()
@@ -99,7 +101,7 @@ class UserPreferencesRepository(context: Context) {
     /**
      * Set the default spool configuration ID for new measurements
      */
-    fun setDefaultSpoolConfigurationId(configurationId: String?) {
+    suspend fun setDefaultSpoolConfigurationId(configurationId: String?) = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .putString(DEFAULT_SPOOL_CONFIG_KEY, configurationId)
             .apply()
@@ -117,7 +119,7 @@ class UserPreferencesRepository(context: Context) {
     /**
      * Set the preferred BLE scale device address
      */
-    fun setPreferredScaleAddress(address: String?) {
+    suspend fun setPreferredScaleAddress(address: String?) = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .putString(PREFERRED_SCALE_ADDRESS_KEY, address)
             .apply()
@@ -133,7 +135,7 @@ class UserPreferencesRepository(context: Context) {
     /**
      * Set the preferred BLE scale device name for display
      */
-    fun setPreferredScaleName(name: String?) {
+    suspend fun setPreferredScaleName(name: String?) = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .putString(PREFERRED_SCALE_NAME_KEY, name)
             .apply()
@@ -149,7 +151,7 @@ class UserPreferencesRepository(context: Context) {
     /**
      * Set BLE scales enabled state
      */
-    fun setBleScalesEnabled(enabled: Boolean) {
+    suspend fun setBleScalesEnabled(enabled: Boolean) = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .putBoolean(BLE_SCALES_ENABLED_KEY, enabled)
             .apply()
@@ -165,7 +167,7 @@ class UserPreferencesRepository(context: Context) {
     /**
      * Set BLE scales auto-connect preference
      */
-    fun setBleScalesAutoConnectEnabled(enabled: Boolean) {
+    suspend fun setBleScalesAutoConnectEnabled(enabled: Boolean) = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .putBoolean(BLE_SCALES_AUTO_CONNECT_KEY, enabled)
             .apply()
